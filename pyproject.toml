@@ -3,11 +3,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mcp-server-template"
+name = "otrs-mcp-server"
 version = "0.1.0"
-description = "A template for building Model Context Protocol (MCP) servers"
+description = "Model Context Protocol server for OTRS (Open Ticket Request System) integration"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Season Poon", email = "seasonpoon.admin@example.com"}
 ]
 readme = "README.md"
 license = {text = "MIT"}
@@ -23,21 +23,22 @@ dependencies = [
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
     "black>=23.0.0",
     "isort>=5.12.0",
     "mypy>=1.5.0"
 ]
 
 [project.scripts]
-mcp-server = "mcp_server_template.main:main"
+otrs-mcp-server = "otrs_mcp.main:run_server"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/mcp-server-template"
-Repository = "https://github.com/yourusername/mcp-server-template"
-Issues = "https://github.com/yourusername/mcp-server-template/issues"
+Homepage = "https://github.com/yourusername/otrs-mcp-server"
+Repository = "https://github.com/yourusername/otrs-mcp-server"
+Issues = "https://github.com/yourusername/otrs-mcp-server/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/mcp_server_template"]
+packages = ["src/otrs_mcp"]
 
 [tool.black]
 line-length = 88
@@ -51,4 +52,34 @@ line_length = 88
 python_version = "3.10"
 strict = true
 warn_return_any = true
-warn_unused_configs = true 
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+] 

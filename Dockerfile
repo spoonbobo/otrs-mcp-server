@@ -19,7 +19,7 @@ WORKDIR /app
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-RUN groupadd -r app && useradd -r -g app app
+RUN groupadd -r otrs && useradd -r -g otrs otrs
 
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/src /app/src
@@ -28,25 +28,32 @@ COPY pyproject.toml /app/
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH="/app" \
+    PYTHONPATH="/app/src" \
     PYTHONFAULTHANDLER=1
 
-USER app
+ENV OTRS_BASE_URL="" \
+    OTRS_USERNAME="" \
+    OTRS_PASSWORD="" \
+    OTRS_VERIFY_SSL="false" \
+    OTRS_DEFAULT_QUEUE="Raw" \
+    OTRS_DEFAULT_STATE="new" \
+    OTRS_DEFAULT_PRIORITY="3 normal" \
+    OTRS_DEFAULT_TYPE="Unclassified"
 
-EXPOSE 8000
+RUN chown -R otrs:otrs /app
+USER otrs
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD python -c "import sys; sys.exit(0)"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD python -c "import otrs_mcp.server; print('OTRS MCP Server is healthy')" || exit 1
 
-CMD ["/app/.venv/bin/mcp-server"]
+CMD ["python", "-m", "otrs_mcp.main"]
 
-# GitHub Container Registry Metadata
-LABEL org.opencontainers.image.title="MCP Server Template" \
-      org.opencontainers.image.description="A template for building Model Context Protocol servers" \
+LABEL org.opencontainers.image.title="OTRS MCP Server" \
+      org.opencontainers.image.description="Model Context Protocol server for OTRS integration" \
       org.opencontainers.image.version="0.1.0" \
-      org.opencontainers.image.authors="Your Name" \
-      org.opencontainers.image.source="https://github.com/yourusername/mcp-server-template" \
+      org.opencontainers.image.authors="Season Poon" \
+      org.opencontainers.image.source="https://github.com/yourusername/otrs-mcp-server" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.url="https://github.com/yourusername/mcp-server-template" \
-      org.opencontainers.image.documentation="https://github.com/yourusername/mcp-server-template#readme" \
-      org.opencontainers.image.vendor="Your Name"
+      org.opencontainers.image.url="https://github.com/yourusername/otrs-mcp-server" \
+      org.opencontainers.image.documentation="https://github.com/yourusername/otrs-mcp-server#readme" \
+      org.opencontainers.image.vendor="Season Poon"

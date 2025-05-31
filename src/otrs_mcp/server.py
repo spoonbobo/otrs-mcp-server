@@ -26,8 +26,9 @@ class OTRSConfig:
 
 config = OTRSConfig()
 
-async def make_api_request(endpoint: str, data: Dict[str, Any] = None, use_session: bool = True) -> Dict[str, Any]:
-    """Make API request to OTRS"""
+async def make_api_request(endpoint: str, data: Dict[str, Any] = None, use_session: bool = True) -> Dict[str, Any]: # type: ignore
+
+    """Make API request to OTRS""" 
     url = f"{config.base_url}/{endpoint}"
     
     # Default data structure for OTRS

@@ -63,13 +63,9 @@ Make sure your OTRS user has appropriate permissions for:
 
 The easiest way to run otrs-mcp with [Claude Desktop](https://claude.ai/desktop) is using Docker. If you don't have Docker installed, you can get it from [Docker's official website](https://www.docker.com/get-started/).
 
-Edit your Claude Desktop config file:
+#### Using Pre-built Image
 
-- Mac: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%/Claude/claude_desktop_config.json`
-- Linux: `~/.config/Claude/claude_desktop_config.json`
-
-Then add the following configuration:
+You can use the pre-built Docker image from GitHub Container Registry:
 
 ```json
 {
@@ -94,11 +90,32 @@ Then add the following configuration:
         "OTRS_DEFAULT_STATE=new",
         "-e",
         "OTRS_DEFAULT_PRIORITY=3 normal",
-        "your-registry/otrs-mcp"
+        "ghcr.io/yourusername/otrs-mcp-server:latest"
       ]
     }
   }
 }
+```
+
+#### Building Locally
+
+If you prefer to build the image locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/otrs-mcp-server.git
+cd otrs-mcp-server
+
+# Build the Docker image
+docker build -t otrs-mcp-server .
+
+# Run the container
+docker run --rm -i \
+  -e OTRS_BASE_URL="https://your-otrs-server/otrs/nph-genericinterface.pl/Webservice/TestInterface" \
+  -e OTRS_USERNAME="your-username" \
+  -e OTRS_PASSWORD="your-password" \
+  -e OTRS_VERIFY_SSL="false" \
+  otrs-mcp-server
 ```
 
 ### Running with UV
@@ -208,6 +225,143 @@ pytest
 
 # Run with coverage report
 pytest --cov=src --cov-report=term-missing
+```
+
+### Publishing Docker Image
+
+To publish the Docker image to GitHub Container Registry for public use:
+
+#### Prerequisites
+
+1. **GitHub Account** with a repository for this project
+2. **GitHub Personal Access Token** with `write:packages` permission
+3. **Docker** installed locally
+
+#### Step-by-Step Publishing
+
+1. **Create GitHub Personal Access Token**:
+
+   - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - Generate new token with `write:packages` and `read:packages` permissions
+   - Save the token securely
+
+2. **Login to GitHub Container Registry**:
+
+   ```bash
+   echo $GITHUB_TOKEN | docker login ghcr.io -u yourusername --password-stdin
+   ```
+
+3. **Build and Tag the Image**:
+
+   ```bash
+   # Build the image
+   docker build -t otrs-mcp-server .
+
+   # Tag for GitHub Container Registry
+   docker tag otrs-mcp-server ghcr.io/yourusername/otrs-mcp-server:latest
+   docker tag otrs-mcp-server ghcr.io/yourusername/otrs-mcp-server:v0.1.0
+   ```
+
+4. **Push to Registry**:
+
+   ```bash
+   # Push latest tag
+   docker push ghcr.io/yourusername/otrs-mcp-server:latest
+
+   # Push version tag
+   docker push ghcr.io/yourusername/otrs-mcp-server:v0.1.0
+   ```
+
+5. **Make Package Public** (Optional):
+   - Go to your GitHub repository
+   - Navigate to Packages section
+   - Click on your package
+   - Go to Package settings
+   - Change visibility to Public
+
+#### Automated Publishing with GitHub Actions
+
+Create `.github/workflows/docker-publish.yml`:
+
+```yaml
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+```
+
+#### Alternative: Docker Hub
+
+To publish to Docker Hub instead:
+
+```bash
+# Login to Docker Hub
+docker login
+
+# Tag for Docker Hub
+docker tag otrs-mcp-server yourusername/otrs-mcp-server:latest
+docker tag otrs-mcp-server yourusername/otrs-mcp-server:v0.1.0
+
+# Push to Docker Hub
+docker push yourusername/otrs-mcp-server:latest
+docker push yourusername/otrs-mcp-server:v0.1.0
+```
+
+Then update the Claude Desktop config to use:
+
+```json
+"ghcr.io/yourusername/otrs-mcp-server:latest"
+```
+
+or
+
+```json
+"yourusername/otrs-mcp-server:latest"
 ```
 
 ## Available Tools
