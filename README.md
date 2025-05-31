@@ -1,3 +1,54 @@
+# OTRS MCP Server
+
+A [Model Context Protocol][mcp] (MCP) server for OTRS (Open Ticket Request System) API integration.
+
+This provides access to OTRS ticket management, configuration items, and other OTRS functionality through standardized MCP interfaces, allowing AI assistants to create, search, and manage tickets and configuration items.
+
+[mcp]: https://modelcontextprotocol.io/introduction/introduction
+
+## Features
+
+- [x] Create, read, update, and search tickets
+- [x] Access ticket history and detailed information
+- [x] Manage configuration items (CMDB)
+- [x] Session management and authentication
+- [x] Configurable default values for tickets
+- [x] Docker containerization support
+- [x] SSL/TLS support with certificate verification options
+- [x] Provide interactive tools for AI assistants
+
+The list of tools is configurable, so you can choose which tools you want to make available to the MCP client.
+
+## Prerequisites
+
+### OTRS Server Configuration
+
+Before using this MCP server, you need to configure your OTRS instance:
+
+#### Step 1: Access OTRS Admin Panel
+
+- URL: `https://your-otrs-server/otrs/index.pl?Action=Admin`
+- Login with your admin credentials
+
+#### Step 2: Configure Web Services
+
+1. Navigate to: **System Administration → Web Services**
+2. Create or verify you have a webservice (e.g., "TestInterface") with these operations:
+   - ✅ SessionCreate
+   - ✅ TicketCreate
+   - ✅ TicketGet
+   - ✅ TicketSearch
+   - ✅ TicketUpdate
+   - ✅ TicketHistoryGet
+   - ✅ ConfigItemGet
+   - ✅ ConfigItemSearch
+
+#### Step 3: Note Your Webservice URL
+
+Your webservice URL should look like:
+
+`https://your-otrs-server/otrs/nph-genericinterface.pl/Webservice/YourWebserviceName`
+
 #### Step 4: Ensure User Permissions
 
 Make sure your OTRS user has appropriate permissions for:
@@ -146,6 +197,19 @@ uv run python tests/debug_test.py
 
 The project includes test scripts that help verify your OTRS configuration and API connectivity.
 
+Run the tests with pytest:
+
+```bash
+# Install development dependencies
+uv pip install -e ".[dev]"
+
+# Run the tests
+pytest
+
+# Run with coverage report
+pytest --cov=src --cov-report=term-missing
+```
+
 ## Available Tools
 
 ### 🎫 Ticket Management
@@ -190,6 +254,37 @@ uv run python tests/debug_test.py
 ```
 
 This will test both HTTP and HTTPS connections and provide detailed error information.
+
+### Example Working Configuration
+
+For reference, here's a working configuration example:
+
+```bash
+# Environment variables
+export OTRS_BASE_URL="https://192.168.5.159/otrs/nph-genericinterface.pl/Webservice/TestInterface"
+export OTRS_USERNAME="seasonpoon.admin"
+export OTRS_PASSWORD="your-password"
+export OTRS_VERIFY_SSL="false"
+export OTRS_DEFAULT_QUEUE="Raw"
+export OTRS_DEFAULT_STATE="new"
+export OTRS_DEFAULT_PRIORITY="3 normal"
+export OTRS_DEFAULT_TYPE="Unclassified"
+```
+
+### OTRS Webservice Operations
+
+Your OTRS webservice should include these operations:
+
+| Operation Name   | Controller                   | Description                    |
+| ---------------- | ---------------------------- | ------------------------------ |
+| SessionCreate    | Session::SessionCreate       | Create authentication sessions |
+| TicketCreate     | Ticket::TicketCreate         | Create new tickets             |
+| TicketGet        | Ticket::TicketGet            | Retrieve ticket details        |
+| TicketSearch     | Ticket::TicketSearch         | Search for tickets             |
+| TicketUpdate     | Ticket::TicketUpdate         | Update existing tickets        |
+| TicketHistoryGet | Ticket::TicketHistoryGet     | Get ticket history             |
+| ConfigItemGet    | ConfigItem::ConfigItemGet    | Retrieve configuration items   |
+| ConfigItemSearch | ConfigItem::ConfigItemSearch | Search configuration items     |
 
 ## License
 
