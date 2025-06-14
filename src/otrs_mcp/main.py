@@ -5,7 +5,7 @@ from otrs_mcp.server import mcp
 
 def setup_environment():
     """Setup and validate environment configuration"""
-    print("🔧 OTRS MCP Server Configuration:")
+    print("[CONFIG] OTRS MCP Server Configuration:")
     
     # Check required environment variables
     required_vars = ["OTRS_BASE_URL", "OTRS_USERNAME", "OTRS_PASSWORD"]
@@ -21,8 +21,8 @@ def setup_environment():
             print(f"  {var}: {display_value}")
     
     if missing_vars:
-        print(f"❌ Missing required environment variables: {', '.join(missing_vars)}")
-        print("\n💡 Set these environment variables:")
+        print(f"[ERROR] Missing required environment variables: {', '.join(missing_vars)}")
+        print("\n[INFO] Set these environment variables:")
         print("  export OTRS_BASE_URL='https://your-otrs-server/otrs/nph-genericinterface.pl/Webservice/TestInterface'")
         print("  export OTRS_USERNAME='your-username'")
         print("  export OTRS_PASSWORD='your-password'")
@@ -42,9 +42,9 @@ def run_server():
     if not setup_environment():
         sys.exit(1)
     
-    print("\n🚀 Starting OTRS MCP Server...")
-    print("📡 Running server in standard mode...")
-    print("🔗 Available operations: SessionCreate, TicketCreate, TicketGet, TicketSearch, TicketUpdate, TicketHistoryGet, ConfigItemGet, ConfigItemSearch")
+    print("\n[START] Starting OTRS MCP Server...")
+    print("[MODE] Running server in standard mode...")
+    print("[OPS] Available operations: SessionCreate, TicketCreate, TicketGet, TicketSearch, TicketUpdate, TicketHistoryGet, ConfigItemGet, ConfigItemSearch")
     
     # Run the server with the stdio transport
     mcp.run(transport="stdio")
